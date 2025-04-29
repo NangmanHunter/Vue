@@ -320,3 +320,69 @@ Vue에서는 `v-model` 대신 `@input`이나 `@change`로 이벤트를 직접 �
 
 필요하시면 `Object.defineProperty`, `Proxy` 등을 써서 바닐라 JS로 진짜 양방향 바인딩 구현하는 고급 예제도 보여드릴 수 있어요. 관심 있으신가요?
 ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ
+좋습니다!  
+이번에는 **Vanilla JavaScript로 Vue의 `v-model`과 같은 양방향 바인딩**을 **직접 구현하는 고급 예제**를 보여드릴게요.  
+Vue처럼 상태가 바뀌면 DOM이 바뀌고, 사용자 입력이 바뀌면 상태도 바뀌는 구조입니다.
+
+---
+
+## ✅ 예제 목표
+- `data.name` 값을 바꾸면 `input`, `p` 모두 자동 업데이트
+- 사용자가 `input`에 입력하면 `data.name`도 자동 갱신
+
+---
+
+## ✅ 코드: `Proxy`를 이용한 양방향 바인딩
+
+```html
+<input id="nameInput" type="text" />
+<p id="nameDisplay"></p>
+
+<script>
+  // DOM 요소
+  const input = document.getElementById('nameInput');
+  const display = document.getElementById('nameDisplay');
+
+  // 상태 객체를 Proxy로 감쌈
+  const data = new Proxy({ name: '' }, {
+    set(target, key, value) {
+      target[key] = value;
+
+      // 상태가 바뀌면 DOM에 반영
+      if (key === 'name') {
+        input.value = value;
+        display.textContent = value;
+      }
+
+      return true;
+    }
+  });
+
+  // 사용자 입력 → 상태 업데이트
+  input.addEventListener('input', () => {
+    data.name = input.value;
+  });
+
+  // 상태를 직접 변경해도 UI가 자동으로 반영됨
+  setTimeout(() => {
+    data.name = '자동 입력된 이름';
+  }, 2000);
+</script>
+```
+
+---
+
+## ✅ 실행 흐름 요약
+
+- `data.name = '홍길동'` 하면 input과 p가 자동으로 바뀜
+- input에 입력하면 `data.name`이 자동으로 바뀜
+
+Vue에서 `v-model="name"` 한 줄로 해결되는 걸,  
+Vanilla JS에서는 `Proxy`, 이벤트 리스너, DOM 조작을 **직접** 다 구현해야 합니다.
+
+---
+
+이게 바로 Vue가 하는 일의 핵심 중 하나예요 —  
+**"데이터와 DOM 사이의 복잡한 동기화"를 대신해주는 것**.
+
+혹시 이 Proxy 방식의 구조를 Vue의 내부 동작 원리와 더 비교해볼까요?
